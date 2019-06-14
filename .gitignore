@@ -1,0 +1,6 @@
+#compiled class files
+*.class
+
+#mac-specific folder structure files
+.DS_Store
+
