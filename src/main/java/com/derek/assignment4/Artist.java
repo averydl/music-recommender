@@ -1,30 +1,34 @@
-package org.derek.assignment4;
+package com.derek.assignment4;
 
-public class Artist extends Person {
-    private String url;
-    private String pictureUrl;
+public class Artist {
+    private int id;
     private String name;
 
-    public Artist(int id, String name, String url, String pictureUrl) {
-        super(id);
+    public Artist(int id, String name) {
+        this.id = id;
         this.name = name;
-        this.url = url;
-        this.pictureUrl = pictureUrl;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getName() {
         return name;
     }
-    public String getUrl() {
-        return url;
-    }
-
-    public String getPictureUrl() {
-        return pictureUrl;
-    }
 
     @Override
     public String toString() {
-        return "Artist: " + this.getName() + " Id: " + this.getId();
+        return name + " - ID: " + id;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof Artist) && ((Artist) o).getId() == id;
     }
 }
