@@ -12,22 +12,6 @@ public class Recommender {
     private Map<Integer, Artist> artistMap = new HashMap<>(); // map between each artist ID and the corresponding artist object
     private Map<Integer, HashSet<Listen>> listenMap = new HashMap<>(); // map from each user id to a set of UserListen objects, representing how much they listen to each artist
 
-    public static void main(String[] args) {
-        Recommender r = new Recommender(
-                "src/main/java/com/derek/recommender/dataset/user_friends.dat",
-                "src/main/java/com/derek/recommender/dataset/artists.dat",
-                "src/main/java/com/derek/recommender/dataset/user_artists.dat"
-        );
-
-        Recommender t = new Recommender(
-                "src/test/dataset/test_friends.dat",
-                "src/test/dataset/test_artists.dat",
-                "src/test/dataset/test_listens.dat"
-        );
-        System.out.println(t.friends(1));
-        System.out.println(t.recommend10(1));
-    }
-
     /*
      * build a new recommender object using the specified
      * @param friendFile, @param artistFile, and @param listenFile
