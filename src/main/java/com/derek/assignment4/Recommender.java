@@ -18,50 +18,6 @@ public class Recommender {
         r.listTop10();
     }
 
-    /*
-     * nested class representing a listening
-     * history of a particular artist (e.g.
-     * UserListen(5, 20) indicates artist 5
-     * has been listened to 20 times
-     */
-    class Listen implements Comparable<Listen> {
-        int id;
-        int count;
-
-        public Listen(int id, int count) {
-            this.id = id;
-            this.count = count;
-        }
-
-        public int getId() {
-            return id;
-        }
-        public int getCount() {
-            return count;
-        }
-
-        @Override
-        public String toString() {
-            return "Artist: " + id + " Count: " + count;
-        }
-
-        @Override
-        public int compareTo(Listen o) {
-            if(count < o.getCount()) {
-                return -1;
-            } else if(count > o.getCount()) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return (o instanceof Listen) && ((Listen) o).getId() == id;
-        }
-    }
-
     public Recommender() {
         // load user friend data
         try {
@@ -174,7 +130,7 @@ public class Recommender {
                 if(!listenMap.containsKey(user)) {
                     listenMap.put(user, new HashSet<Listen>());
                 }
-                listenMap.get(user).add(new Listen(artist, listens));
+                listenMap.get(user).add(new Listen(artist, listens, artistMap.get(artist).getName()));
             } catch(Exception e) {
                 System.out.println("Discarded the line with content: [" + line + "] - content improperly formatted");
             }
@@ -182,11 +138,11 @@ public class Recommender {
     }
 
     /*
-     * print top 10 overall artists
+     * print top 10 overall listened-to artists
      */
     public void listTop10() {
-        for(Integer artist : top10(listenMap.keySet())) {
-            System.out.println(artistMap.get(artist));
+        for(Listen listen : top10(listenMap.keySet())) {
+            System.out.println(listen);
         }
     }
 
@@ -197,8 +153,8 @@ public class Recommender {
     public void recommend10(int user) {
         Set<Integer> users = friends(user);
         users.add(user);
-        for(Integer artist : top10(users)) {
-            System.out.println(artistMap.get(artist));
+        for(Listen listen : top10(users)) {
+            System.out.println(listen);
         }
     }
 
@@ -206,23 +162,22 @@ public class Recommender {
      * returns the set of artists with the most music
      * plays by users in the set @param users
      */
-    public Set<Integer> top10(Set<Integer> users) {
+    public Set<Listen> top10(Set<Integer> users) {
         Map<Integer, Listen> map = new HashMap<>(); // map from each artist to their total play count
 
         // create map from each artist id to their total song play count among users in the set
         for(Integer user : users) {
             for(Listen listen : listenMap.get(user)) {
                 if(map.containsKey(listen.getId())) { // increment count of existing artists' 'Listen' values
-                    Listen cur = map.get(listen.getId());
-                    map.put(cur.getId(),
-                            new Listen(cur.getId(), map.get(cur.getId()).getCount() + cur.getCount()));
+                    map.put(listen.getId(),
+                            new Listen(listen.getId(), map.get(listen.getId()).getCount() + listen.getCount(), artistMap.get(listen.getId()).getName()));
                 } else {
                     map.put(listen.getId(), listen);
                 }
             }
         }
         MaxPQ<Listen> pQueue = new MaxPQ<>();
-        Set<Integer> top10 = new HashSet<>();
+        Set<Listen> top10 = new HashSet<>();
 
         // add all 'Listen' objects to priority queue
         for(Integer listen : map.keySet()) {
@@ -231,7 +186,7 @@ public class Recommender {
 
         // remove top 10 Listen objects from priority queue, and add them to the result set
         for(int i = 0; i < 10; i++) {
-            top10.add(pQueue.delMax().getId());
+            top10.add(pQueue.delMax());
         }
         return top10;
     }
