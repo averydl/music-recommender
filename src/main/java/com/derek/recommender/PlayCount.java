@@ -3,15 +3,15 @@ package com.derek.recommender;
     /*
      * class representing a listening
      * history of a particular artist (e.g.
-     * UserListen(5, 20) indicates artist 5
+     * PlayCount(5, 20) indicates artist 5
      * has been listened to 20 times
      */
-    class Listen implements Comparable<Listen> {
+    class PlayCount implements Comparable<PlayCount> {
         int id;
         int count;
         String name;
 
-        public Listen(int id, int count, String name) {
+        public PlayCount(int id, int count, String name) {
             this.id = id;
             this.count = count;
             this.name = name;
@@ -30,7 +30,7 @@ package com.derek.recommender;
         }
 
         @Override
-        public int compareTo(Listen o) {
+        public int compareTo(PlayCount o) {
             if(count < o.getCount()) {
                 return -1;
             } else if(count > o.getCount()) {
@@ -42,6 +42,6 @@ package com.derek.recommender;
 
         @Override
         public boolean equals(Object o) {
-            return (o instanceof Listen) && ((Listen) o).getId() == id;
+            return (o instanceof PlayCount) && ((PlayCount) o).getId() == id;
         }
     }

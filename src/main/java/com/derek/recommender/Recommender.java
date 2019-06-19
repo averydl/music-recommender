@@ -10,7 +10,7 @@ import java.util.*;
 public class Recommender {
     private Graph users; // graph in which vertices represent users, and edges represent friendships between users
     private Map<Integer, Artist> artistMap = new HashMap<>(); // map between each artist ID and the corresponding artist object
-    private Map<Integer, HashSet<Listen>> listenMap = new HashMap<>(); // map from each user id to a set of UserListen objects, representing how much they listen to each artist
+    private Map<Integer, HashSet<PlayCount>> listenMap = new HashMap<>(); // map from each user id to a set of PlayCount objects, representing how much they listen to each artist
 
     /*
      * build a new recommender object using the specified
@@ -57,7 +57,7 @@ public class Recommender {
      * edges between vertices represent friendships between two users
      * with the id's corresponding to each vertex of the edge
      */
-    public Graph loadUsers(String fileName) throws FileNotFoundException {
+    private Graph loadUsers(String fileName) throws FileNotFoundException {
         int maxId = 0; // maximum value of a user id (used to determine size of the user graph)
         Scanner in = new Scanner(new File(fileName)); // Scanner to parse user data file
         ArrayList<Integer> user1 = new ArrayList<>(); // first user in user-to-user connection
@@ -100,7 +100,7 @@ public class Recommender {
      * to populate a HashMap mapping from each artist id to a new
      * artist object which includes their id, name, URL and pictureURL
      */
-    public void loadArtists(String fileName) throws FileNotFoundException {
+    private void loadArtists(String fileName) throws FileNotFoundException {
         Scanner in = new Scanner(new File(fileName)); // Scanner to parse artist data file
         while(in.hasNextLine()) {
             String line = in.nextLine();
@@ -124,7 +124,7 @@ public class Recommender {
      * corresponding to the number of times the user is specified
      * to have listened to them, based on the 3rd
      */
-    public void loadListenInfo(String fileName) throws FileNotFoundException {
+    private void loadListenInfo(String fileName) throws FileNotFoundException {
         Scanner in = new Scanner(new File(fileName)); // Scanner to parse artist data file
         while(in.hasNextLine()) {
             String line = in.nextLine();
@@ -136,7 +136,7 @@ public class Recommender {
                 if(!listenMap.containsKey(user)) {
                     listenMap.put(user, new HashSet<>());
                 }
-                listenMap.get(user).add(new Listen(artist, listens, artistMap.get(artist).getName()));
+                listenMap.get(user).add(new PlayCount(artist, listens, artistMap.get(artist).getName()));
             } catch(Exception e) {
                 System.out.println("Discarded the line with content: [" + line + "] - content improperly formatted");
             }
@@ -149,9 +149,9 @@ public class Recommender {
      */
     public Set<Integer> listTop10() {
         Set<Integer> top10 = new HashSet<>();
-        for(Listen listen : top10(listenMap.keySet())) {
-            top10.add(listen.getId());
-            System.out.println(listen);
+        for(PlayCount playCount : top10(listenMap.keySet())) {
+            top10.add(playCount.getId());
+            System.out.println(playCount);
         }
         return top10;
     }
@@ -165,9 +165,9 @@ public class Recommender {
         Set<Integer> users = friends(user);
         Set<Integer> artists = new HashSet<>();
         users.add(user);
-        for(Listen listen : top10(users)) {
-            artists.add(listen.getId());
-            System.out.println(listen);
+        for(PlayCount playCount : top10(users)) {
+            artists.add(playCount.getId());
+            System.out.println(playCount);
         }
         return artists;
     }
@@ -176,29 +176,29 @@ public class Recommender {
      * returns the set of artists with the most music
      * plays by users in the set @param users
      */
-    public Set<Listen> top10(Set<Integer> users) {
-        Map<Integer, Listen> map = new HashMap<>(); // map from each artist to their total play count
+    public Set<PlayCount> top10(Set<Integer> users) {
+        Map<Integer, PlayCount> map = new HashMap<>(); // map from each artist to their total play count
 
         // create map from each artist id to their total song play count among users in the set
         for(Integer user : users) {
-            for(Listen listen : listenMap.get(user)) {
-                if(map.containsKey(listen.getId())) { // increment count of existing artists' 'Listen' values
-                    map.put(listen.getId(),
-                            new Listen(listen.getId(), map.get(listen.getId()).getCount() + listen.getCount(), artistMap.get(listen.getId()).getName()));
+            for(PlayCount playCount : listenMap.get(user)) {
+                if(map.containsKey(playCount.getId())) { // increment count of existing artists' 'PlayCount' values
+                    map.put(playCount.getId(),
+                            new PlayCount(playCount.getId(), map.get(playCount.getId()).getCount() + playCount.getCount(), artistMap.get(playCount.getId()).getName()));
                 } else {
-                    map.put(listen.getId(), listen);
+                    map.put(playCount.getId(), playCount);
                 }
             }
         }
-        MaxPQ<Listen> pQueue = new MaxPQ<>();
-        Set<Listen> top10 = new HashSet<>();
+        MaxPQ<PlayCount> pQueue = new MaxPQ<>();
+        Set<PlayCount> top10 = new HashSet<>();
 
-        // add all 'Listen' objects to priority queue
+        // add all 'PlayCount' objects to priority queue
         for(Integer listen : map.keySet()) {
             pQueue.insert(map.get(listen));
         }
 
-        // remove top 10 Listen objects from priority queue, and add them to the result set
+        // remove top 10 PlayCount objects from priority queue, and add them to the result set
         for(int i = 0; i < 10 && !pQueue.isEmpty(); i++) {
             top10.add(pQueue.delMax());
         }
@@ -251,11 +251,11 @@ public class Recommender {
     public Set<Integer> artists(int user1, int user2) {
         Set<Integer> artists1 = new HashSet<>();
         Set<Integer> artists2 = new HashSet<>();
-        for(Listen listen : listenMap.get(user1)) {
-            artists1.add(listen.getId());
+        for(PlayCount playCount : listenMap.get(user1)) {
+            artists1.add(playCount.getId());
         }
-        for(Listen listen : listenMap.get(user2)) {
-            artists2.add(listen.getId());
+        for(PlayCount playCount : listenMap.get(user2)) {
+            artists2.add(playCount.getId());
         }
 
         artists1.retainAll(artists2);
