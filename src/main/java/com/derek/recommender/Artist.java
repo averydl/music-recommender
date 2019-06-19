@@ -1,4 +1,4 @@
-package com.derek.assignment4;
+package com.derek.recommender;
 
 public class Artist {
     private int id;

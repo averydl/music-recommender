@@ -1,6 +1,5 @@
-package com.derek.assignment4;
+package com.derek.recommender;
 
-import edu.princeton.cs.algs4.Bag;
 import edu.princeton.cs.algs4.Graph;
 import edu.princeton.cs.algs4.MaxPQ;
 
@@ -14,14 +13,29 @@ public class Recommender {
     private Map<Integer, HashSet<Listen>> listenMap = new HashMap<>(); // map from each user id to a set of UserListen objects, representing how much they listen to each artist
 
     public static void main(String[] args) {
-        Recommender r = new Recommender();
-        r.listTop10();
+        Recommender r = new Recommender(
+                "src/main/java/com/derek/recommender/dataset/user_friends.dat",
+                "src/main/java/com/derek/recommender/dataset/artists.dat",
+                "src/main/java/com/derek/recommender/dataset/user_artists.dat"
+        );
+
+        Recommender t = new Recommender(
+                "src/test/dataset/test_friends.dat",
+                "src/test/dataset/test_artists.dat",
+                "src/test/dataset/test_listens.dat"
+        );
+        System.out.println(t.friends(1));
+        System.out.println(t.recommend10(1));
     }
 
-    public Recommender() {
+    /*
+     * build a new recommender object using the specified
+     * @param friendFile, @param artistFile, and @param listenFile
+     */
+    public Recommender(String friendFile, String artistFile, String listenFile) {
         // load user friend data
         try {
-            users = loadUsers("/Users/DerekAvery/Desktop/music-recommender/src/main/java/com/derek/assignment4/dataset/user_friends.dat");
+            users = loadUsers(friendFile);
         } catch(FileNotFoundException fnfe) {
             System.out.println("Could not open user-friend file.");
             fnfe.printStackTrace();
@@ -29,7 +43,7 @@ public class Recommender {
 
         // load artist data
         try {
-            loadArtists("/Users/DerekAvery/Desktop/music-recommender/src/main/java/com/derek/assignment4/dataset/artists.dat");
+            loadArtists(artistFile);
         } catch(FileNotFoundException fnfe) {
             System.out.println("Could not open artist file.");
             fnfe.printStackTrace();
@@ -37,11 +51,19 @@ public class Recommender {
 
         // load user listening info
         try {
-            loadListenInfo("/Users/DerekAvery/Desktop/music-recommender/src/main/java/com/derek/assignment4/dataset/user_artists.dat");
+            loadListenInfo(listenFile);
         } catch(FileNotFoundException fnfe) {
             System.out.println("Could not open user-artist file.");
             fnfe.printStackTrace();
         }
+    }
+
+    /*
+     * returns number of users in graph (# of
+     * vertices, -1 to account for unused '0' vertex)
+     */
+    public int userSize() {
+        return users.V()-1;
     }
 
     /*
@@ -62,7 +84,7 @@ public class Recommender {
         // to two separate array lists at the same index
         while(in.hasNextLine()) {
             line++;
-            String[] curLine = in.nextLine().split("\t");
+            String[] curLine = in.nextLine().split("\\s");
             if(curLine.length > 1) {
                 try { // add user id pairs to separate lists; add unique users to 'users' set
                     int id1 = Integer.parseInt(curLine[0]);
@@ -98,7 +120,7 @@ public class Recommender {
         Scanner in = new Scanner(new File(fileName)); // Scanner to parse artist data file
         while(in.hasNextLine()) {
             String line = in.nextLine();
-            String[] fields = line.split("\t");
+            String[] fields = line.split("\\s");
             try {
                 int id = Integer.parseInt(fields[0]);
                 String name = fields[1];
@@ -122,13 +144,13 @@ public class Recommender {
         Scanner in = new Scanner(new File(fileName)); // Scanner to parse artist data file
         while(in.hasNextLine()) {
             String line = in.nextLine();
-            String[] fields = line.split("\t");
+            String[] fields = line.split("\\s");
             try {
                 int user = Integer.parseInt(fields[0]);
                 int artist = Integer.parseInt(fields[1]);
                 int listens = Integer.parseInt(fields[2]);
                 if(!listenMap.containsKey(user)) {
-                    listenMap.put(user, new HashSet<Listen>());
+                    listenMap.put(user, new HashSet<>());
                 }
                 listenMap.get(user).add(new Listen(artist, listens, artistMap.get(artist).getName()));
             } catch(Exception e) {
@@ -139,23 +161,31 @@ public class Recommender {
 
     /*
      * print top 10 overall listened-to artists
+     * and returns their id's in a Set
      */
-    public void listTop10() {
+    public Set<Integer> listTop10() {
+        Set<Integer> top10 = new HashSet<>();
         for(Listen listen : top10(listenMap.keySet())) {
+            top10.add(listen.getId());
             System.out.println(listen);
         }
+        return top10;
     }
 
     /*
      * print top 10 artists among a user
      * @param user and his/her friends
+     * and returns their id's in a set
      */
-    public void recommend10(int user) {
+    public Set<Integer> recommend10(int user) {
         Set<Integer> users = friends(user);
+        Set<Integer> artists = new HashSet<>();
         users.add(user);
         for(Listen listen : top10(users)) {
+            artists.add(listen.getId());
             System.out.println(listen);
         }
+        return artists;
     }
 
     /*
@@ -185,7 +215,7 @@ public class Recommender {
         }
 
         // remove top 10 Listen objects from priority queue, and add them to the result set
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < 10 && !pQueue.isEmpty(); i++) {
             top10.add(pQueue.delMax());
         }
         return top10;
@@ -234,7 +264,7 @@ public class Recommender {
      * returns the set of artist id's of artists
      * listened to by both @param user1 and @param user2
      */
-    private Set<Integer> artists(int user1, int user2) {
+    public Set<Integer> artists(int user1, int user2) {
         Set<Integer> artists1 = new HashSet<>();
         Set<Integer> artists2 = new HashSet<>();
         for(Listen listen : listenMap.get(user1)) {
@@ -252,7 +282,7 @@ public class Recommender {
      * returns a set of id's of
      * all the friends of @param user
      */
-    private Set<Integer> friends(int user) {
+    public Set<Integer> friends(int user) {
         Set<Integer> friends = new HashSet<>();
         for(Integer friend : users.adj(user)) {
             friends.add(friend);
@@ -264,7 +294,7 @@ public class Recommender {
      * returns a set of all friends shared
      * between @param user1 and @param user2
      */
-    private Set<Integer> common(int user1, int user2) {
+    public Set<Integer> common(int user1, int user2) {
         Set<Integer> friends = friends(user1);
         friends.retainAll(friends(user2));
         return friends;
